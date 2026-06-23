@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<meta name="theme-color" content="#f8f7f4"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="DDW"/>
+<title>DDW — Don't Die Wondering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --cream: #f8f7f4;
+  --white: #ffffff;
+  --ink: #1a1a18;
+  --ink2: #3a3a36;
+  --dim: #8a8a82;
+  --border: #e2e0da;
+  --border2: #d0cec6;
+  --accent: #1a1a18;
+  --gold: #c9a84c;
+  --sage: #6b7c5e;
+  --red: #c44b3a;
+  --card: #ffffff;
+  --bg: #f8f7f4;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'DM Mono',monospace;overflow:hidden}
+#app{height:100%;display:none;flex-direction:column}
+#view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+/* NAV */
+#nav{flex-shrink:0;display:flex;background:var(--white);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom)}
+.nb{flex:1;border:none;background:transparent;color:var(--dim);padding:10px 2px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;border-top:2px solid transparent;transition:all 0.2s;font-family:'DM Mono',monospace}
+.nb.on{color:var(--ink);border-top-color:var(--ink)}
+.nb .ni{font-size:16px}
+.nb .nl{font-size:7px;letter-spacing:2px;text-transform:uppercase;color:inherit}
+
+/* TYPOGRAPHY */
+.serif{font-family:'Cormorant Garamond',serif}
+.mono{font-family:'DM Mono',monospace}
+.eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--dim);font-family:'DM Mono',monospace}
+.display{font-family:'Cormorant Garamond',serif;font-weight:300;letter-spacing:-0.5px}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:2px}
+.card-soft{background:var(--white);border:1px solid var(--border2);border-radius:2px}
+
+/* DIVIDER */
+.rule{height:1px;background:var(--border);margin:0}
+
+/* PILL */
+.pill{display:inline-flex;align-items:center;padding:3px 10px;border:1px solid var(--border2);border-radius:20px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim)}
+.pill-dark{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.pill-gold{background:transparent;color:var(--gold);border-color:var(--gold)}
+.pill-sage{background:transparent;color:var(--sage);border-color:var(--sage)}
+
+/* MACRO BAR */
+.macro-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.macro-fill{height:100%;border-radius:2px;transition:width 0.5s ease}
+
+/* CHECKIN BUTTON */
+.check-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:1px solid var(--border2);border-radius:2px;cursor:pointer;transition:all 0.2s;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;background:transparent;color:var(--dim)}
+.check-btn.done{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+
+/* PHOTO PLACEHOLDER */
+.photo-box{background:var(--border);display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-family:'DM Mono',monospace}
+
+/* TABS */
+.tab-row{display:flex;border-bottom:1px solid var(--border);background:var(--white)}
+.tab{flex:1;padding:12px 6px;border:none;background:transparent;border-bottom:2px solid transparent;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);cursor:pointer;transition:all 0.2s}
+.tab.on{color:var(--ink);border-bottom-color:var(--ink)}
+
+.pb80{padding-bottom:80px}
+
+/* SPLASH SCREEN */
+#splash{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:#FAF8F5;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:9999;
+  transition:opacity 0.8s ease;
+}
+#splash.fade{opacity:0;pointer-events:none}
+#splash svg{width:72vw;max-width:320px;height:auto}
+#splash-sub{
+  margin-top:32px;
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:5px;
+  text-transform:uppercase;
+  color:#BBBBBB;
+  opacity:0;
+  animation:splashsub 0.6s ease 1.0s forwards;
+}
+@keyframes splashsub{to{opacity:1}}
+#splash-logo{
+  opacity:0;
+  transform:translateY(8px);
+  animation:splashlogo 0.9s ease 0.2s forwards;
+}
+@keyframes splashlogo{to{opacity:1;transform:translateY(0)}}
+
+/* AUTH SCREENS */
+#auth{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9000;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none}
+#auth.show{display:block}
+.auth-wrap{max-width:440px;margin:0 auto;padding:48px 24px 60px;min-height:100%;display:flex;flex-direction:column}
+.auth-logo{text-align:center;margin-bottom:32px}
+.auth-logo .display{font-size:42px;color:var(--ink)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:6px;font-family:'DM Mono',monospace}
+.field input,.field select,.field textarea{
+  width:100%;padding:12px 14px;border:1px solid var(--border2);border-radius:2px;
+  font-family:'DM Mono',monospace;font-size:13px;color:var(--ink);background:var(--white);
+}
+.field textarea{resize:vertical;min-height:80px}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--ink)}
+.btn-primary{
+  width:100%;padding:14px;background:var(--ink);color:var(--cream);border:none;border-radius:2px;
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;
+}
+.btn-primary:active{opacity:0.8}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed}
+.btn-text{background:none;border:none;color:var(--dim);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;text-decoration:underline;padding:8px 0}
+.auth-error{background:#fdeeec;border:1px solid var(--red);color:var(--red);padding:10px 12px;font-size:11px;border-radius:2px;margin-bottom:16px}
+.step-progress{display:flex;gap:4px;margin-bottom:28px}
+.step-progress span{flex:1;height:2px;background:var(--border)}
+.step-progress span.on{background:var(--ink)}
+.pending-icon{font-size:48px;text-align:center;margin-bottom:20px;color:var(--gold)}
+</style>
+</head>
+<body>
+<!-- SPLASH SCREEN -->
+<div id="splash">
+  <div id="splash-logo">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+      <defs>
+        <style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300&amp;display=swap');</style>
+        <clipPath id="splashClip"><rect width="512" height="512" rx="112" ry="112"/></clipPath>
+      </defs>
+      <rect width="512" height="512" rx="112" ry="112" fill="#FAF8F5"/>
+      <circle cx="70" cy="450" r="200" fill="none" stroke="#DDDDCC" stroke-width="1" opacity="0.5" clip-path="url(#splashClip)"/>
+      <text x="256" y="310"
+            font-family="'Cormorant Garamond', Georgia, serif"
+            font-size="170"
+            font-weight="300"
+            fill="#111111"
+            text-anchor="middle"
+            letter-spacing="-4">DDW</text>
+      <line x1="166" y1="365" x2="346" y2="365" stroke="#CCCCCC" stroke-width="0.8"/>
+      <text x="256" y="394"
+            font-family="'Cormorant Garamond', Georgia, serif"
+            font-size="19"
+            font-weight="400"
+            fill="#AAAAAA"
+            text-anchor="middle"
+            letter-spacing="5">DON'T DIE WONDERING</text>
+    </svg>
+  </div>
+  <div id="splash-sub">Performance &nbsp;·&nbsp; Nutrition &nbsp;·&nbsp; Longevity</div>
+</div>
+
+<!-- AUTH SCREENS -->
+<div id="auth">
+  <div class="auth-wrap" id="auth-content"></div>
+</div>
+
+<div id="app">
+<div id="view"></div>
+<nav id="nav">
+  <button class="nb on" onclick="go('home')" id="nb-home"><span class="ni">◇</span><span class="nl">Home</span></button>
+  <button class="nb" onclick="go('coach')" id="nb-coach"><span class="ni">◈</span><span class="nl">Coach</span></button>
+  <button class="nb" onclick="go('train')" id="nb-train"><span class="ni">◻</span><span class="nl">Train</span></button>
+  <button class="nb" onclick="go('fuel')" id="nb-fuel"><span class="ni">◎</span><span class="nl">Fuel</span></button>
+  <button class="nb" onclick="go('results')" id="nb-results"><span class="ni">◉</span><span class="nl">Results</span></button>
+</nav>
+</div>
+
+<script>
+// ── SUPABASE ──────────────────────────────────────────────────
+var SUPABASE_URL = 'https://qeovoxwxbmegczyghwsz.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFlb3ZveHd4Ym1lZ2N6eWdod3N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMjc1NzIsImV4cCI6MjA5NzgwMzU3Mn0.NnkVgyPZEcgyvsvXPtfSK1bFHrlb7j9X-9EyxA2cY4Y';
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+var AUTH = {
+  screen: 'login',      // login | register | pending | rejected
+  step: 1,               // registration step
+  loading: false,
+  error: '',
+  user: null,
+  profile: null,
+  reg: {
+    first_name:'', last_name:'', email:'', phone:'', password:'',
+    age:'', height_in:'', weight_lbs:'', gender:'',
+    fitness_level:'', primary_goal:'', desired_outcome:'',
+    training_days:'', gym_access:'', injuries:'',
+    nutrition_commitment:'', experience_level:'', mindset_answer:''
+  }
+};
+
+function showAuth(){
+  document.getElementById('auth').classList.add('show');
+  document.getElementById('app').style.display = 'none';
+  renderAuth();
+}
+function hideAuth(){
+  document.getElementById('auth').classList.remove('show');
+  document.getElementById('app').style.display = 'flex';
+}
+
+// ── AUTH BOOT ─────────────────────────────────────────────────
+async function bootAuth(){
+  var dismissSplash = function(){
+    var splash = document.getElementById('splash');
+    if(splash){ splash.classList.add('fade'); setTimeout(function(){splash.style.display='none';},900); }
+  };
+
+  var session = (await sb.auth.getSession()).data.session;
+  if(!session){
+    setTimeout(function(){ dismissSplash(); showAuth(); }, 1400);
+    return;
+  }
+  AUTH.user = session.user;
+  var prof = await fetchProfile(session.user.id);
+  AUTH.profile = prof;
+
+  setTimeout(function(){
+    dismissSplash();
+    if(!prof){ AUTH.screen='login'; showAuth(); return; }
+    if(prof.status === 'pending'){ AUTH.screen='pending'; showAuth(); return; }
+    if(prof.status === 'rejected'){ AUTH.screen='rejected'; showAuth(); return; }
+    // approved — enter app
+    hideAuth();
+    render();
+  }, 1400);
+}
+
+async function fetchProfile(userId){
+  var res = await sb.from('profiles').select('*').eq('id', userId).single();
+  if(res.error) return null;
+  return res.data;
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────
+async function doLogin(email, password){
+  AUTH.error=''; AUTH.loading=true; renderAuth();
+  var res = await sb.auth.signInWithPassword({email:email, password:password});
+  AUTH.loading=false;
+  if(res.error){ AUTH.error = res.error.message; renderAuth(); return; }
+  AUTH.user = res.data.user;
+  var prof = await fetchProfile(res.data.user.id);
+  AUTH.profile = prof;
+  if(!prof){ AUTH.error='No profile found for this account.'; renderAuth(); return; }
+  if(prof.status==='pending'){ AUTH.screen='pending'; renderAuth(); return; }
+  if(prof.status==='rejected'){ AUTH.screen='rejected'; renderAuth(); return; }
+  hideAuth();
+  render();
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  AUTH.user=null; AUTH.profile=null; AUTH.screen='login'; AUTH.step=1;
+  showAuth();
+}
+
+// ── REGISTER ──────────────────────────────────────────────────
+async function doRegister(){
+  AUTH.error=''; 
+  var r = AUTH.reg;
+  if(!r.email || !r.password || !r.first_name || !r.last_name){
+    AUTH.error = 'Please fill in all required fields.'; renderAuth(); return;
+  }
+  AUTH.loading=true; renderAuth();
+
+  var signUp = await sb.auth.signUp({email:r.email, password:r.password});
+  if(signUp.error){ AUTH.loading=false; AUTH.error = signUp.error.message; renderAuth(); return; }
+
+  var userId = signUp.data.user ? signUp.data.user.id : null;
+  if(!userId){
+    AUTH.loading=false;
+    AUTH.error = 'Check your email to confirm your account, then log in.';
+    AUTH.screen='login'; renderAuth(); return;
+  }
+
+  var insert = await sb.from('profiles').insert({
+    id: userId,
+    first_name: r.first_name, last_name: r.last_name, email: r.email, phone: r.phone,
+    age: r.age || null, height_in: r.height_in || null, weight_lbs: r.weight_lbs || null,
+    gender: r.gender || null, fitness_level: r.fitness_level || null,
+    primary_goal: r.primary_goal || null, desired_outcome: r.desired_outcome || null,
+    training_days: r.training_days || null, gym_access: r.gym_access || null,
+    injuries: r.injuries || null, nutrition_commitment: r.nutrition_commitment || null,
+    experience_level: r.experience_level || null, mindset_answer: r.mindset_answer || null,
+    start_weight: r.weight_lbs || null, current_weight: r.weight_lbs || null,
+    status: 'pending', role: 'client'
+  });
+
+  AUTH.loading=false;
+  if(insert.error){ AUTH.error = insert.error.message; renderAuth(); return; }
+
+  AUTH.user = signUp.data.user;
+  AUTH.profile = {status:'pending'};
+  AUTH.screen='pending';
+  renderAuth();
+}
+
+function regUpdate(field, val){ AUTH.reg[field] = val; }
+function regNext(){
+  if(AUTH.step===1){
+    if(!AUTH.reg.first_name||!AUTH.reg.last_name||!AUTH.reg.email||!AUTH.reg.password){
+      AUTH.error='Please fill in all required fields.'; renderAuth(); return;
+    }
+  }
+  AUTH.error='';
+  AUTH.step++;
+  renderAuth();
+}
+function regBack(){ AUTH.step--; AUTH.error=''; renderAuth(); }
+
+// ── RENDER AUTH ───────────────────────────────────────────────
+function renderAuth(){
+  var c = document.getElementById('auth-content');
+  var html = '';
+
+  html += '<div class="auth-logo"><div class="display">DDW</div></div>';
+
+  if(AUTH.error){
+    html += '<div class="auth-error">'+AUTH.error+'</div>';
+  }
+
+  if(AUTH.screen==='login') html += authLogin();
+  else if(AUTH.screen==='register') html += authRegister();
+  else if(AUTH.screen==='pending') html += authPending();
+  else if(AUTH.screen==='rejected') html += authRejected();
+
+  c.innerHTML = html;
+}
+
+function authLogin(){
+  var html = '';
+  html += '<div class="eyebrow" style="text-align:center;margin-bottom:24px">Welcome Back</div>';
+  html += '<div class="field"><label>Email</label><input type="email" id="li-email" placeholder="you@email.com"/></div>';
+  html += '<div class="field"><label>Password</label><input type="password" id="li-pass" placeholder="••••••••"/></div>';
+  html += '<button class="btn-primary" '+(AUTH.loading?'disabled':'')+' onclick="doLogin(document.getElementById(\'li-email\').value,document.getElementById(\'li-pass\').value)">'+(AUTH.loading?'Signing In...':'Sign In')+'</button>';
+  html += '<div style="text-align:center;margin-top:20px"><button class="btn-text" onclick="AUTH.screen=\'register\';AUTH.step=1;AUTH.error=\'\';renderAuth()">New here? Apply for DDW</button></div>';
+  return html;
+}
+
+function authRejected(){
+  var html = '';
+  html += '<div class="pending-icon">✕</div>';
+  html += '<div class="display" style="font-size:22px;text-align:center;margin-bottom:12px">Application Not Approved</div>';
+  html += '<div style="font-size:12px;color:var(--dim);text-align:center;line-height:1.6;margin-bottom:24px">Reach out to the DDW team directly if you believe this is an error.</div>';
+  html += '<button class="btn-text" style="margin:0 auto;display:block" onclick="doLogout()">Back to Login</button>';
+  return html;
+}
+
+function authPending(){
+  var html = '';
+  html += '<div class="pending-icon">◐</div>';
+  html += '<div class="display" style="font-size:22px;text-align:center;margin-bottom:12px">Application Pending</div>';
+  html += '<div style="font-size:12px;color:var(--dim);text-align:center;line-height:1.6;margin-bottom:24px">Your application is under review. Edson personally approves every DDW client. You\'ll get access as soon as you\'re approved.</div>';
+  html += '<button class="btn-text" style="margin:0 auto;display:block" onclick="doLogout()">Sign Out</button>';
+  return html;
+}
+
+function authRegister(){
+  var r = AUTH.reg;
+  var totalSteps = 3;
+  var html = '';
+  html += '<div class="step-progress">';
+  for(var i=1;i<=totalSteps;i++) html += '<span class="'+(i<=AUTH.step?'on':'')+'"></span>';
+  html += '</div>';
+
+  if(AUTH.step===1){
+    html += '<div class="eyebrow" style="margin-bottom:20px">Step 1 — Create Account</div>';
+    html += '<div class="field"><label>First Name *</label><input id="r-fn" value="'+r.first_name+'" oninput="regUpdate(\'first_name\',this.value)"/></div>';
+    html += '<div class="field"><label>Last Name *</label><input id="r-ln" value="'+r.last_name+'" oninput="regUpdate(\'last_name\',this.value)"/></div>';
+    html += '<div class="field"><label>Email *</label><input type="email" id="r-em" value="'+r.email+'" oninput="regUpdate(\'email\',this.value)"/></div>';
+    html += '<div class="field"><label>Phone</label><input id="r-ph" value="'+r.phone+'" oninput="regUpdate(\'phone\',this.value)"/></div>';
+    html += '<div class="field"><label>Password *</label><input type="password" id="r-pw" value="'+r.password+'" oninput="regUpdate(\'password\',this.value)"/></div>';
+    html += '<button class="btn-primary" onclick="regNext()">Continue</button>';
+  }
+
+  else if(AUTH.step===2){
+    html += '<div class="eyebrow" style="margin-bottom:20px">Step 2 — Physical Stats</div>';
+    html += '<div class="field"><label>Age</label><input type="number" value="'+r.age+'" oninput="regUpdate(\'age\',this.value)"/></div>';
+    html += '<div class="field"><label>Height (inches)</label><input type="number" value="'+r.height_in+'" oninput="regUpdate(\'height_in\',this.value)"/></div>';
+    html += '<div class="field"><label>Weight (lbs)</label><input type="number" value="'+r.weight_lbs+'" oninput="regUpdate(\'weight_lbs\',this.value)"/></div>';
+    html += '<div class="field"><label>Gender</label><select oninput="regUpdate(\'gender\',this.value)"><option value="">Select...</option><option>Male</option><option>Female</option><option>Other</option></select></div>';
+    html += '<div class="field"><label>Current Status</label><select oninput="regUpdate(\'fitness_level\',this.value)"><option value="">Select...</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>';
+    html += '<div class="field"><label>Primary Goal</label><select oninput="regUpdate(\'primary_goal\',this.value)"><option value="">Select...</option><option>Lose Weight</option><option>Build Muscle</option><option>Recomp</option><option>Increase Strength</option><option>Improve Athletic Performance</option></select></div>';
+    html += '<div style="display:flex;gap:10px"><button class="btn-text" onclick="regBack()">← Back</button></div>';
+    html += '<button class="btn-primary" style="margin-top:10px" onclick="regNext()">Continue</button>';
+  }
+
+  else if(AUTH.step===3){
+    html += '<div class="eyebrow" style="margin-bottom:20px">Step 3 — Training & Mindset</div>';
+    html += '<div class="field"><label>Training Availability</label><select oninput="regUpdate(\'training_days\',this.value)"><option value="">Select...</option><option>3 days</option><option>4 days</option><option>5 days</option><option>6 days</option></select></div>';
+    html += '<div class="field"><label>Gym Access</label><select oninput="regUpdate(\'gym_access\',this.value)"><option value="">Select...</option><option>Full Gym</option><option>Home Gym</option><option>Bodyweight Only</option></select></div>';
+    html += '<div class="field"><label>Injuries / Limitations</label><textarea oninput="regUpdate(\'injuries\',this.value)"></textarea></div>';
+    html += '<div class="field"><label>Nutrition Commitment Level</label><select oninput="regUpdate(\'nutrition_commitment\',this.value)"><option value="">Select...</option><option>Low</option><option>Medium</option><option>High</option></select></div>';
+    html += '<div class="field"><label>Why are you joining DDW?</label><textarea oninput="regUpdate(\'mindset_answer\',this.value)"></textarea></div>';
+    html += '<div style="display:flex;gap:10px"><button class="btn-text" onclick="regBack()">← Back</button></div>';
+    html += '<button class="btn-primary" style="margin-top:10px" '+(AUTH.loading?'disabled':'')+' onclick="doRegister()">'+(AUTH.loading?'Submitting...':'Submit Application')+'</button>';
+  }
+
+  html += '<div style="text-align:center;margin-top:20px"><button class="btn-text" onclick="AUTH.screen=\'login\';AUTH.error=\'\';renderAuth()">Already approved? Sign in</button></div>';
+  return html;
+}
+</script>
+
+<script>
+var S = {page:'home', trainDay:0, mealPlan:'hybrid', mealTab:'breakfast', mealLog:{}, sub:null, subData:null};
+
+// ── STORAGE ───────────────────────────────────────────────────
+function todayKey(){ return new Date().toISOString().split('T')[0]; }
+function loadJ(k,d){ try{ return JSON.parse(localStorage.getItem(k)||'null')||d; }catch(e){ return d; } }
+function saveJ(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+
+function getMacroLog(){
+  var all = loadJ('ddw_macros', {});
+  return all[todayKey()] || {p:0,c:0,f:0,cal:0,meals:[]};
+}
+
+function logMeal(meal){
+  var all = loadJ('ddw_macros', {});
+  var today = todayKey();
+  if(!all[today]) all[today] = {p:0,c:0,f:0,cal:0,meals:[]};
+  var d = all[today];
+  if(d.meals.indexOf(meal.id) === -1){
+    d.meals.push(meal.id);
+    d.p += meal.p; d.c += meal.c; d.f += meal.f; d.cal += meal.cal;
+    saveJ('ddw_macros', all);
+  }
+  render();
+}
+
+function getStreak(){
+  var s = loadJ('ddw_str',{}), t = todayKey();
+  var y = new Date(); y.setDate(y.getDate()-1);
+  var yk = y.toISOString().split('T')[0];
+  return (s.last===t||s.last===yk) ? (s.count||0) : 0;
+}
+
+function logWorkout(){
+  var s = loadJ('ddw_str',{}), t = todayKey();
+  var y = new Date(); y.setDate(y.getDate()-1);
+  var yk = y.toISOString().split('T')[0];
+  if(s.last === t) return render();
+  s.count = (s.last===yk) ? (s.count||0)+1 : 1;
+  s.last = t;
+  saveJ('ddw_str', s);
+  render();
+}
+
+// ── GYM DATA ──────────────────────────────────────────────────
+var GYM = [
+  {day:"Monday",focus:"Chest & Triceps",tag:"Push",exercises:[
+    {name:"Barbell Bench Press",sets:"4",reps:"6–8",note:"Primary chest compound",link:"https://youtube.com/watch?v=vcBig73ojpE"},
+    {name:"Incline Dumbbell Press",sets:"3",reps:"8–10",note:"Upper chest emphasis",link:"https://youtube.com/watch?v=0G2_XV7slIg"},
+    {name:"Cable Chest Flye",sets:"3",reps:"12–15",note:"Stretch and squeeze",link:"https://youtube.com/watch?v=Iwe6AmxVf7o"},
+    {name:"Weighted Dips",sets:"3",reps:"8–10",note:"Lean forward for chest",link:"https://youtube.com/watch?v=yN6Q1UI_xkE"},
+    {name:"Tricep Rope Pushdown",sets:"3",reps:"12–15",note:"Isolate the tricep",link:"https://youtube.com/watch?v=vB5OHsJ3EME"},
+    {name:"Overhead Tricep Extension",sets:"3",reps:"10–12",note:"Long head focus",link:"https://youtube.com/watch?v=YbX7Wd8jQ-Q"},
+    {name:"Seated Overhead Press (Tricep)",sets:"3",reps:"10–12",note:"Full tricep squeeze",link:"https://youtube.com/watch?v=YbX7Wd8jQ-Q"}
+  ]},
+  {day:"Tuesday",focus:"Back & Biceps",tag:"Pull",exercises:[
+    {name:"Barbell Row",sets:"4",reps:"6–8",note:"Overhand, drive elbows back",link:"https://youtube.com/watch?v=G8l_8chR5BE"},
+    {name:"Pull-Ups / Lat Pulldown",sets:"4",reps:"8–10",note:"Wide grip",link:"https://youtube.com/watch?v=eGo4IYlbE5g"},
+    {name:"Seated Cable Row",sets:"3",reps:"10–12",note:"Full stretch, hard squeeze",link:"https://youtube.com/watch?v=GZbfZ033f74"},
+    {name:"Single-Arm Dumbbell Row",sets:"3",reps:"10 each",note:"Full range of motion",link:"https://youtube.com/watch?v=pYcpY20QaE8"},
+    {name:"Barbell Curl",sets:"3",reps:"8–10",note:"Strict, no swing",link:"https://youtube.com/watch?v=kwG2ipFRgfo"},
+    {name:"Hammer Curl",sets:"3",reps:"12 each",note:"Brachialis emphasis",link:"https://youtube.com/watch?v=TwD-YGVP4Bk"}
+  ]},
+  {day:"Wednesday",focus:"Shoulders & Core",tag:"Overhead",exercises:[
+    {name:"Overhead Press",sets:"4",reps:"6–8",note:"Primary shoulder builder",link:"https://youtube.com/watch?v=qEwKCR5JCog"},
+    {name:"Arnold Press",sets:"3",reps:"10–12",note:"Full range rotation",link:"https://youtube.com/watch?v=6Z15_WdXmVw"},
+    {name:"Lateral Raise",sets:"4",reps:"15–20",note:"Side delt isolation",link:"https://youtube.com/watch?v=3VcKaXpzqRo"},
+    {name:"Rear Delt Cable Flye",sets:"3",reps:"15",note:"Posture and rear delt",link:"https://youtube.com/watch?v=EA7u4Q_8HQ0"},
+    {name:"Cable Crunch",sets:"3",reps:"15–20",note:"Weighted core",link:"https://youtube.com/watch?v=AV5PmtB7BSA"},
+    {name:"Hanging Leg Raise",sets:"3",reps:"12–15",note:"Lower abdominals",link:"https://youtube.com/watch?v=hdng3Nm1x_E"},
+    {name:"Plank Hold",sets:"3",reps:"60s",note:"Total core stability",link:"https://youtube.com/watch?v=ASdvN_XEl_c"}
+  ]},
+  {day:"Thursday",focus:"Legs",tag:"Lower",exercises:[
+    {name:"Barbell Back Squat",sets:"4",reps:"6–8",note:"Below parallel",link:"https://youtube.com/watch?v=ultWZbUMPL8"},
+    {name:"Romanian Deadlift",sets:"4",reps:"8–10",note:"Hamstring hinge",link:"https://youtube.com/watch?v=JCXUYuzwNrM"},
+    {name:"Leg Press",sets:"3",reps:"10–12",note:"High foot placement",link:"https://youtube.com/watch?v=IZxyjW7MPJQ"},
+    {name:"Walking Dumbbell Lunges",sets:"3",reps:"12 each",note:"Controlled descent",link:"https://youtube.com/watch?v=L8fvypPrzzs"},
+    {name:"Lying Leg Curl",sets:"3",reps:"12–15",note:"Slow negative",link:"https://youtube.com/watch?v=1Tq3QdYUuHs"},
+    {name:"Standing Calf Raise",sets:"4",reps:"15–20",note:"Pause at top",link:"https://youtube.com/watch?v=-M4-G8p8fmc"}
+  ]},
+  {day:"Friday",focus:"Upper Body Volume",tag:"Upper",exercises:[
+    {name:"T-Bar Row",sets:"4",reps:"8–10",note:"Back thickness",link:"https://youtube.com/watch?v=j3Igk5nyZE4"},
+    {name:"Chest-Supported Row",sets:"3",reps:"10–12",note:"Strict isolation",link:"https://youtube.com/watch?v=oFJnUFCMFEo"},
+    {name:"Pec Deck / Machine Flye",sets:"3",reps:"12–15",note:"No shoulder stress",link:"https://youtube.com/watch?v=Z57CtFmRMxA"},
+    {name:"Cable Flye Low to High",sets:"3",reps:"15",note:"Upper chest",link:"https://youtube.com/watch?v=Iwe6AmxVf7o"},
+    {name:"Straight-Arm Pulldown",sets:"3",reps:"15",note:"Lat isolation",link:"https://youtube.com/watch?v=XLKUOM6k_LY"},
+    {name:"Face Pulls",sets:"3",reps:"15–20",note:"Shoulder health",link:"https://youtube.com/watch?v=rep-qVOkqgk"}
+  ]},
+  {day:"Saturday",focus:"Arms & Core",tag:"Detail",exercises:[
+    {name:"EZ-Bar Curl",sets:"4",reps:"8–10",note:"Wrist-friendly",link:"https://youtube.com/watch?v=zG2i9-uJBs0"},
+    {name:"Incline Dumbbell Curl",sets:"3",reps:"10–12",note:"Long head stretch",link:"https://youtube.com/watch?v=soxrZlIl35U"},
+    {name:"Close-Grip Bench Press",sets:"4",reps:"8–10",note:"Tricep mass",link:"https://youtube.com/watch?v=nEF0bv2FW94"},
+    {name:"Skull Crushers",sets:"3",reps:"10–12",note:"EZ-bar",link:"https://youtube.com/watch?v=ir5PsbniVSc"},
+    {name:"Concentration Curl",sets:"3",reps:"12 each",note:"Peak contraction",link:"https://youtube.com/watch?v=Jvj2wV0vOYU"},
+    {name:"Dead Hang Leg Raise",sets:"3",reps:"12–15",note:"Full hang, controlled",link:"https://youtube.com/watch?v=hdng3Nm1x_E"},
+    {name:"Weighted Russian Twist",sets:"3",reps:"20 total",note:"Oblique focus",link:"https://youtube.com/watch?v=wkD8rjkodUI"}
+  ]}
+];
+
+// ── MEAL PLANS ────────────────────────────────────────────────
+var PLANS = {
+  cut:{label:"Cut",desc:"Caloric deficit. Preserve muscle, reduce body fat.",target:{cal:2000,p:200,c:160,f:55},color:"#c44b3a"},
+  hybrid:{label:"Hybrid",desc:"Slight surplus on training days. Maintenance on rest.",target:{cal:2600,p:200,c:280,f:70},color:"#c9a84c"},
+  bulk:{label:"Bulk",desc:"Caloric surplus. Maximize muscle growth.",target:{cal:3200,p:220,c:380,f:80},color:"#6b7c5e"}
+};
+
+var MEAL_DATA = {
+  cut:{
+    breakfast:{id:"cut_b",name:"Morning Meal",time:"7–9 AM",cal:420,p:45,c:30,f:14,items:["5 egg whites + 1 whole egg — scrambled","½ cup oats with water","1 cup mixed berries","Black coffee"],prep:"High protein, moderate carb. Sets the metabolic tone for the day."},
+    lunch:{id:"cut_l",name:"Midday Meal",time:"12–1 PM",cal:480,p:52,c:38,f:12,items:["6 oz grilled chicken breast","1 cup cooked brown rice","2 cups mixed greens + cucumber","2 tbsp olive oil and lemon"],prep:"Lean protein anchors every cut meal. Never skip greens."},
+    snack:{id:"cut_s",name:"Afternoon",time:"3–4 PM",cal:220,p:30,c:18,f:5,items:["1 scoop whey protein in water","1 medium apple"],prep:"Bridge between lunch and dinner. Prevent muscle breakdown."},
+    dinner:{id:"cut_d",name:"Evening Meal",time:"6–8 PM",cal:460,p:55,c:28,f:14,items:["7 oz white fish or salmon","1 cup steamed broccoli and zucchini","½ cup quinoa","Lemon, herbs, olive oil"],prep:"High protein, lower carb in the evening on a cut."}
+  },
+  hybrid:{
+    breakfast:{id:"hyb_b",name:"Morning Meal",time:"7–9 AM",cal:640,p:46,c:72,f:18,items:["3 whole eggs + 3 egg whites","1 cup oats with almond milk","1 banana","1 tbsp almond butter"],prep:"Higher carb morning fuels training. Adjust based on training vs rest day."},
+    lunch:{id:"hyb_l",name:"Midday Meal",time:"12–1 PM",cal:740,p:56,c:88,f:16,items:["6 oz chicken breast or thighs","1.5 cups white rice","1 cup mixed vegetables","Hot sauce, olive oil"],prep:"This is your performance meal. Eat it every day without fail."},
+    snack:{id:"hyb_s",name:"Pre or Post Workout",time:"Before/After Gym",cal:340,p:38,c:34,f:6,items:["1.5 scoops whey protein","1 banana","Water or almond milk"],prep:"On training days, have this 30–60 min before or right after gym."},
+    dinner:{id:"hyb_d",name:"Evening Meal",time:"7–9 PM",cal:680,p:54,c:62,f:18,items:["6 oz ground turkey or salmon","1 cup rice","1.5 cups frozen mixed veg","Garlic, cumin, olive oil"],prep:"Solid recovery meal. Protein and moderate carbs. Cook in 12 minutes."}
+  },
+  bulk:{
+    breakfast:{id:"blk_b",name:"Morning Meal",time:"7–9 AM",cal:820,p:52,c:96,f:22,items:["4 whole eggs + 2 egg whites","1.5 cups oats","1 banana + ½ cup berries","2 tbsp peanut butter","1 cup whole milk"],prep:"Calorie dense, protein rich. This is a bulk — do not skip or undereat."},
+    lunch:{id:"blk_l",name:"Midday Meal",time:"12–1 PM",cal:950,p:65,c:110,f:22,items:["8 oz chicken thighs","2 cups white rice","1 cup black beans","1 cup mixed veg","Olive oil"],prep:"Your largest meal. Eat everything. This drives growth."},
+    snack:{id:"blk_s",name:"Workout Fuel",time:"Around Gym",cal:480,p:42,c:52,f:10,items:["2 scoops whey protein","1 banana","1 cup oats blended in shake","Whole milk"],prep:"Mass shake. Drink pre-workout or split before and after."},
+    dinner:{id:"blk_d",name:"Evening Meal",time:"7–9 PM",cal:820,p:62,c:82,f:20,items:["8 oz ground beef 80/20 or salmon","1.5 cups rice","1 cup vegetables","½ avocado","Olive oil"],prep:"Final meal needs to be substantial. Healthy fats support hormone production during bulk."}
+  }
+};
+
+// ── TESTIMONIALS ──────────────────────────────────────────────
+var TESTIMONIALS = [
+  {name:"Client Name",age:28,duration:"16 weeks",program:"Hybrid",lost:"18 lbs body fat",gained:"Lean muscle",quote:"Add this client's story here — how long they struggled, what they tried before, and what changed when they found the DDW program.",before:"",after:"",region:"Orange County, CA"},
+  {name:"Client Name",age:34,duration:"12 weeks",program:"Cut",lost:"22 lbs",gained:"Visible abs for the first time",quote:"Add this client's story here. Make it specific and real — the more detail the more it resonates.",before:"",after:"",region:"Los Angeles, CA"},
+  {name:"Client Name",age:41,duration:"20 weeks",program:"Bulk",lost:"Body fat",gained:"24 lbs lean mass",quote:"Add this client's story here. Real transformation, real struggle, real result.",before:"",after:"",region:"Irvine, CA"},
+  {name:"Client Name",age:26,duration:"8 weeks",program:"Hybrid",lost:"12 lbs",gained:"Confidence and consistency",quote:"This is where you tell their story. What they felt before. What changed. What they would tell someone starting today.",before:"",after:"",region:"San Diego, CA"}
+];
+
+// ── NAVIGATION ────────────────────────────────────────────────
+function go(page){
+  S.page=page; S.sub=null; S.subData=null;
+  document.querySelectorAll('.nb').forEach(function(b){ b.classList.remove('on'); });
+  var nb = document.getElementById('nb-'+page);
+  if(nb) nb.classList.add('on');
+  render();
+}
+function render(){
+  var v=document.getElementById('view');
+  v.innerHTML=''; v.scrollTop=0;
+  if(S.page==='home') renderHome(v);
+  else if(S.page==='coach') renderCoach(v);
+  else if(S.page==='train') renderTrain(v);
+  else if(S.page==='fuel') renderFuel(v);
+  else if(S.page==='results') renderResults(v);
+}
+
+// ── HOME ──────────────────────────────────────────────────────
+function renderHome(v){
+  var streak = getStreak();
+  var log = getMacroLog();
+  var plan = PLANS[S.mealPlan];
+  var pct = plan.target.cal > 0 ? Math.min(Math.round(log.cal/plan.target.cal*100),100) : 0;
+
+  var html = '<div class="pb80">';
+
+  // Hero
+  html += '<div style="background:var(--ink);padding:48px 24px 36px;position:relative;overflow:hidden">';
+  html += '<div style="position:absolute;top:0;right:0;width:200px;height:200px;border:1px solid rgba(255,255,255,0.05);border-radius:50%;transform:translate(40%,-40%)"></div>';
+  html += '<div style="position:absolute;bottom:0;left:0;width:120px;height:120px;border:1px solid rgba(255,255,255,0.04);border-radius:50%;transform:translate(-30%,40%)"></div>';
+  html += '<div class="eyebrow" style="color:rgba(255,255,255,0.35);margin-bottom:14px">Don\'t Die Wondering</div>';
+  html += '<div class="display" style="font-size:44px;color:var(--cream);line-height:1;margin-bottom:8px">DDW</div>';
+  html += '<div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:3px;text-transform:uppercase;margin-bottom:24px">Performance · Wellness · Coaching</div>';
+  html += '<button onclick="doLogout()" style="position:absolute;top:48px;right:24px;background:none;border:none;color:rgba(255,255,255,0.3);font-family:\'DM Mono\',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-decoration:underline">Sign Out</button>';
+  html += '<div style="display:flex;gap:10px">';
+  html += '<span class="pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);color:rgba(255,255,255,0.5)">Coaching</span>';
+  html += '<span class="pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);color:rgba(255,255,255,0.5)">Peptides</span>';
+  html += '<span class="pill" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);color:rgba(255,255,255,0.5)">Merch</span>';
+  html += '</div></div>';
+
+  // Daily overview
+  html += '<div style="background:var(--white);border-bottom:1px solid var(--border);padding:20px 20px 0">';
+  html += '<div class="eyebrow" style="margin-bottom:16px">Today\'s Overview</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:20px">';
+  var stats = [
+    {label:'Streak',val:streak+'d',sub:'consecutive'},
+    {label:'Calories',val:log.cal,sub:'of '+plan.target.cal+' kcal'},
+    {label:'Protein',val:log.p+'g',sub:'of '+plan.target.p+'g goal'}
+  ];
+  stats.forEach(function(s){
+    html += '<div style="background:var(--white);padding:14px 12px;text-align:center">';
+    html += '<div class="display" style="font-size:26px;line-height:1;margin-bottom:3px">'+s.val+'</div>';
+    html += '<div class="eyebrow" style="font-size:8px">'+s.label+'</div>';
+    html += '<div style="font-size:9px;color:var(--dim);margin-top:2px">'+s.sub+'</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // Macro progress bar
+  html += '<div style="margin-bottom:20px">';
+  html += '<div style="display:flex;justify-content:space-between;margin-bottom:8px">';
+  html += '<div style="font-size:10px;color:var(--dim);letter-spacing:1px">Daily Calorie Progress</div>';
+  html += '<div style="font-size:10px;color:var(--ink)">'+pct+'%</div>';
+  html += '</div>';
+  html += '<div class="macro-bar"><div class="macro-fill" style="width:'+pct+'%;background:var(--ink)"></div></div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px">';
+  var macros = [{l:'Protein',v:log.p,max:plan.target.p,c:'#1a1a18'},{l:'Carbs',v:log.c,max:plan.target.c,c:'#c9a84c'},{l:'Fat',v:log.f,max:plan.target.f,c:'#6b7c5e'}];
+  macros.forEach(function(m){
+    var mp = m.max>0?Math.min(Math.round(m.v/m.max*100),100):0;
+    html += '<div>';
+    html += '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:9px;color:var(--dim)">'+m.l+'</span><span style="font-size:9px;color:var(--ink)">'+m.v+'g</span></div>';
+    html += '<div class="macro-bar"><div class="macro-fill" style="width:'+mp+'%;background:'+m.c+'"></div></div>';
+    html += '</div>';
+  });
+  html += '</div></div></div>';
+
+  // Quick nav
+  html += '<div style="padding:20px">';
+  html += '<div class="eyebrow" style="margin-bottom:14px">Your Program</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  var cards = [
+    {icon:'◈',title:'Coach Edson',sub:'Your guide',page:'coach'},
+    {icon:'◻',title:'Training',sub:'6-day program',page:'train'},
+    {icon:'◎',title:'Nutrition',sub:S.mealPlan.charAt(0).toUpperCase()+S.mealPlan.slice(1)+' plan active',page:'fuel'},
+    {icon:'◉',title:'Transformations',sub:'Client results',page:'results'}
+  ];
+  cards.forEach(function(c){
+    html += '<div onclick="go(\''+c.page+'\')" style="background:var(--white);border:1px solid var(--border);padding:18px;cursor:pointer">';
+    html += '<div class="display" style="font-size:24px;margin-bottom:8px;color:var(--dim)">'+c.icon+'</div>';
+    html += '<div style="font-size:13px;font-weight:500;letter-spacing:0.3px;margin-bottom:2px">'+c.title+'</div>';
+    html += '<div style="font-size:10px;color:var(--dim)">'+c.sub+'</div>';
+    html += '</div>';
+  });
+  html += '</div></div>';
+
+  // DDW quote
+  html += '<div style="margin:0 20px 0;border:1px solid var(--border);padding:20px;background:var(--white)">';
+  html += '<div class="display" style="font-size:20px;line-height:1.4;color:var(--ink);margin-bottom:10px;font-style:italic">"Don\'t die wondering what you could have become."</div>';
+  html += '<div class="eyebrow">Edson Moreno · Founder, DDW</div>';
+  html += '</div>';
+
+  html += '</div>';
+  v.innerHTML = html;
+}
+
+// ── COACH ─────────────────────────────────────────────────────
+function renderCoach(v){
+  var html = '<div class="pb80">';
+
+  // Header
+  html += '<div style="background:var(--ink);padding:40px 24px 32px">';
+  html += '<div class="eyebrow" style="color:rgba(255,255,255,0.35);margin-bottom:12px">Your Coach</div>';
+  html += '<div class="display" style="font-size:36px;color:var(--cream);line-height:1.1;margin-bottom:6px">Edson<br>Moreno</div>';
+  html += '<div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:2px;text-transform:uppercase">Founder · DDW Performance</div>';
+  html += '</div>';
+
+  // Photo placeholder
+  html += '<div class="photo-box" style="height:280px">Coach Photo — Add Edson\'s photo here</div>';
+
+  // Story
+  html += '<div style="padding:24px 20px">';
+  html += '<div class="eyebrow" style="margin-bottom:16px">The Story</div>';
+
+  var story = [
+    {head:"From the Pitch to the Weight Room", body:"Edson Moreno grew up with a singular focus: professional soccer. From childhood in Utah, the sport was everything — discipline, identity, and direction. He trained hard, competed seriously, and built a mindset that most athletes never develop.\n\nWhen his playing career ended after high school, that foundation stayed. But without the structure of a team, a season, and a coach, the fitness side of his life became something different — and harder than he expected."},
+    {head:"A Decade of Searching", body:"For nearly ten years, Edson tried everything. Personal trainers. Meal plans that promised results. Programs designed for other people's goals and other people's bodies. Some worked partially. Most did not last.\n\nHe was not lacking effort or discipline — he had both. What was missing was the right system. The right combination of training stimulus, nutritional precision, and programming that worked with his body rather than against it."},
+    {head:"The Breakthrough", body:"The answer did not come from a single source. It came from years of iteration — studying sports science, applying peptide research, refining macronutrient timing, and testing protocols on himself before ever prescribing them to others.\n\nWhen it clicked, the results were undeniable. And he realized the system he had built was not just for him. It was transferable. Repeatable. Scalable to anyone willing to commit."},
+    {head:"DDW — Don't Die Wondering", body:"Now based in Orange County, California, Edson works with clients who are done wondering what they could look and feel like if they had the right plan, the right accountability, and the right coach.\n\nDDW is built on one belief: every person who commits fully to this program will reach goals they have spent years chasing. No one finishes wondering what was possible. They know — because they lived it."}
+  ];
+
+  story.forEach(function(s){
+    html += '<div style="margin-bottom:24px">';
+    html += '<div style="font-size:13px;font-weight:500;letter-spacing:0.3px;margin-bottom:8px;color:var(--ink)">'+s.head+'</div>';
+    html += '<div style="font-size:13px;color:var(--ink2);line-height:1.8">'+s.body.replace(/\n\n/g,'</div><div style="font-size:13px;color:var(--ink2);line-height:1.8;margin-top:10px">')+'</div>';
+    html += '</div>';
+    html += '<div class="rule" style="margin-bottom:24px"></div>';
+  });
+
+  // Credentials
+  html += '<div class="eyebrow" style="margin-bottom:14px">Background</div>';
+  var creds = ['Competitive soccer — youth through high school','Decade of personal fitness research and application','Peptide protocol specialist','Macronutrient precision coaching','Orange County, California based'];
+  creds.forEach(function(c){
+    html += '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">';
+    html += '<div style="width:4px;height:4px;background:var(--ink);border-radius:50%;flex-shrink:0;margin-top:6px"></div>';
+    html += '<div style="font-size:12px;color:var(--ink2)">'+c+'</div>';
+    html += '</div>';
+  });
+
+  // CTA
+  html += '<div style="margin-top:24px;background:var(--ink);padding:20px">';
+  html += '<div class="eyebrow" style="color:rgba(255,255,255,0.4);margin-bottom:8px">Ready to Start</div>';
+  html += '<div class="display" style="font-size:24px;color:var(--cream);margin-bottom:12px">Work with Edson directly.</div>';
+  html += '<div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.7">Coaching spots are limited. Add contact link or booking info here.</div>';
+  html += '</div>';
+
+  html += '</div></div>';
+  v.innerHTML = html;
+}
+
+// ── TRAINING ──────────────────────────────────────────────────
+function renderTrain(v){
+  if(S.sub==='exercise'){ renderExercise(v); return; }
+
+  var gd = GYM[S.trainDay];
+  var streak = getStreak();
+  var dayLogged = loadJ('ddw_str',{}).last === todayKey();
+
+  var html = '<div class="pb80">';
+
+  // Header
+  html += '<div style="background:var(--white);padding:20px 20px 0;border-bottom:1px solid var(--border)">';
+  html += '<div class="eyebrow" style="margin-bottom:4px">6-Day Program</div>';
+  html += '<div class="display" style="font-size:28px;margin-bottom:16px">Training</div>';
+
+  // Day tabs
+  html += '<div style="display:flex;overflow-x:auto;scrollbar-width:none;gap:0;margin:0 -20px;padding:0 20px">';
+  GYM.forEach(function(d,i){
+    html += '<button onclick="S.trainDay='+i+';render()" style="flex:0 0 auto;padding:10px 14px;border:none;background:transparent;border-bottom:2px solid '+(i===S.trainDay?'var(--ink)':'transparent')+';color:'+(i===S.trainDay?'var(--ink)':'var(--dim)')+';font-family:\'DM Mono\',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;white-space:nowrap">'+d.day.slice(0,3)+'</button>';
+  });
+  html += '</div></div>';
+
+  // Day detail
+  html += '<div style="padding:20px">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">';
+  html += '<div>';
+  html += '<span class="pill" style="margin-bottom:8px;display:inline-block">'+gd.tag+'</span>';
+  html += '<div class="display" style="font-size:30px;line-height:1;margin-bottom:4px">'+gd.day+'</div>';
+  html += '<div style="font-size:12px;color:var(--dim)">'+gd.focus+'</div>';
+  html += '</div>';
+  html += '<div style="text-align:right">';
+  html += '<div class="display" style="font-size:36px;line-height:1">'+gd.exercises.length+'</div>';
+  html += '<div class="eyebrow" style="font-size:8px">exercises</div>';
+  html += '</div></div>';
+
+  // Log workout button
+  html += '<div onclick="logWorkout()" style="margin-bottom:16px;padding:12px;border:1px solid '+(dayLogged?'var(--ink)':'var(--border)')+';background:'+(dayLogged?'var(--ink)':'transparent')+';display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer">';
+  html += '<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:'+(dayLogged?'var(--cream)':'var(--dim)')+'">';
+  html += dayLogged ? '✓ Workout Logged — Day '+streak+' Streak' : 'Log Today\'s Workout';
+  html += '</div></div>';
+
+  // Exercises
+  gd.exercises.forEach(function(ex,i){
+    html += '<div onclick="S.sub=\'exercise\';S.subData=ex;render()" style="background:var(--white);border:1px solid var(--border);padding:14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">';
+    html += '<div>';
+    html += '<div style="font-size:13px;font-weight:400;margin-bottom:3px">'+ex.name+'</div>';
+    html += '<div style="font-size:10px;color:var(--dim)">'+ex.note+'</div>';
+    html += '<div style="font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:4px">▶ Form guide</div>';
+    html += '</div>';
+    html += '<div style="text-align:right;flex-shrink:0;padding-left:12px">';
+    html += '<div style="font-size:13px;color:var(--ink)">'+ex.sets+' × '+ex.reps+'</div>';
+    html += '<div style="font-size:9px;color:var(--dim);margin-top:1px">sets × reps</div>';
+    html += '</div></div>';
+  });
+
+  html += '<div style="margin-top:16px;padding:14px;border:1px solid var(--border);background:var(--white)">';
+  html += '<div style="font-size:11px;color:var(--dim);line-height:1.7">Progressive overload every week. Add weight or one rep to your main lifts. Sunday is full rest — recovery is when the adaptation happens.</div>';
+  html += '</div>';
+
+  html += '</div></div>';
+  v.innerHTML = html;
+}
+
+function renderExercise(v){
+  var ex = S.subData;
+  var html = '<div class="pb80">';
+  html += '<div style="padding:20px 20px 0">';
+  html += '<button onclick="S.sub=null;render()" style="background:none;border:none;font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:2px;color:var(--dim);cursor:pointer;padding:0;margin-bottom:16px;text-transform:uppercase">← Back</button>';
+  html += '</div>';
+  html += '<div class="photo-box" style="height:220px">Exercise demonstration — tap Form Guide to watch</div>';
+  html += '<div style="padding:20px">';
+  html += '<div class="eyebrow" style="margin-bottom:8px">Exercise</div>';
+  html += '<div class="display" style="font-size:30px;margin-bottom:6px">'+ex.name+'</div>';
+  html += '<div style="font-size:12px;color:var(--dim);margin-bottom:20px">'+ex.note+'</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:20px">';
+  html += '<div style="background:var(--white);padding:16px;text-align:center"><div class="display" style="font-size:28px">'+ex.sets+'</div><div class="eyebrow" style="font-size:8px;margin-top:4px">Sets</div></div>';
+  html += '<div style="background:var(--white);padding:16px;text-align:center"><div class="display" style="font-size:28px">'+ex.reps+'</div><div class="eyebrow" style="font-size:8px;margin-top:4px">Reps</div></div>';
+  html += '</div>';
+  html += '<a href="'+ex.link+'" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:var(--ink);color:var(--cream);text-decoration:none;font-family:\'DM Mono\',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase">▶ Watch Form Guide</a>';
+  html += '</div></div>';
+  v.innerHTML = html;
+}
+
+// ── FUEL ──────────────────────────────────────────────────────
+function renderFuel(v){
+  var plan = PLANS[S.mealPlan];
+  var meals = MEAL_DATA[S.mealPlan];
+  var log = getMacroLog();
+  var tabs = ['breakfast','lunch','snack','dinner'];
+  var m = meals[S.mealTab];
+  var logged = log.meals.indexOf(m.id) > -1;
+
+  var html = '<div class="pb80">';
+
+  // Header
+  html += '<div style="background:var(--white);padding:20px 20px 0;border-bottom:1px solid var(--border)">';
+  html += '<div class="eyebrow" style="margin-bottom:4px">Nutrition</div>';
+  html += '<div class="display" style="font-size:28px;margin-bottom:14px">Fuel</div>';
+
+  // Plan selector
+  html += '<div style="display:flex;gap:6px;margin-bottom:16px">';
+  Object.keys(PLANS).forEach(function(k){
+    var p = PLANS[k];
+    html += '<div onclick="S.mealPlan=\''+k+'\';render()" style="flex:1;padding:8px;border:1px solid '+(k===S.mealPlan?'var(--ink)':'var(--border)')+';background:'+(k===S.mealPlan?'var(--ink)':'transparent')+';text-align:center;cursor:pointer">';
+    html += '<div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:'+(k===S.mealPlan?'var(--cream)':'var(--dim)')+'">'+p.label+'</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  html += '<div style="font-size:11px;color:var(--dim);margin-bottom:4px">'+plan.desc+'</div>';
+  html += '<div style="font-size:10px;color:var(--dim);margin-bottom:16px">Daily target: '+plan.target.cal+' kcal · '+plan.target.p+'g protein · '+plan.target.c+'g carbs · '+plan.target.f+'g fat</div>';
+
+  // Meal tabs
+  html += '<div style="display:flex;margin:0 -20px;border-top:1px solid var(--border)">';
+  tabs.forEach(function(t){
+    var ml = meals[t];
+    var done = log.meals.indexOf(ml.id) > -1;
+    html += '<button onclick="S.mealTab=\''+t+'\';render()" style="flex:1;padding:10px 4px;border:none;background:transparent;border-bottom:2px solid '+(t===S.mealTab?'var(--ink)':'transparent')+';font-family:\'DM Mono\',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:'+(done?'var(--sage)':t===S.mealTab?'var(--ink)':'var(--dim)')+';cursor:pointer">'+(done?'✓ ':'')+t+'</button>';
+  });
+  html += '</div></div>';
+
+  // Daily macro tracker
+  html += '<div style="background:var(--white);border-bottom:1px solid var(--border);padding:16px 20px">';
+  html += '<div class="eyebrow" style="margin-bottom:10px">Today\'s Macros</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
+  var ms = [{l:'Cal',v:log.cal,t:plan.target.cal},{l:'Prot',v:log.p,t:plan.target.p},{l:'Carb',v:log.c,t:plan.target.c},{l:'Fat',v:log.f,t:plan.target.f}];
+  ms.forEach(function(m2){
+    var pct2 = m2.t>0?Math.min(Math.round(m2.v/m2.t*100),100):0;
+    html += '<div style="text-align:center">';
+    html += '<div style="font-size:14px;font-weight:500;color:var(--ink)">'+m2.v+'</div>';
+    html += '<div style="font-size:8px;color:var(--dim);margin:2px 0">'+m2.l+'</div>';
+    html += '<div class="macro-bar"><div class="macro-fill" style="width:'+pct2+'%;background:var(--ink)"></div></div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  var loggedCount = log.meals.length;
+  html += '<div style="font-size:10px;color:var(--dim)">'+loggedCount+' of 4 meals logged today</div>';
+  html += '</div>';
+
+  // Current meal
+  html += '<div style="padding:16px 20px">';
+  html += '<div style="background:var(--white);border:1px solid var(--border)">';
+  html += '<div style="padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start">';
+  html += '<div>';
+  html += '<div class="eyebrow" style="margin-bottom:6px">'+m.time+'</div>';
+  html += '<div style="font-size:18px;font-weight:400;letter-spacing:0.3px">'+m.name+'</div>';
+  html += '</div>';
+  html += '<div style="text-align:right">';
+  html += '<div class="display" style="font-size:28px;line-height:1">'+m.cal+'</div>';
+  html += '<div class="eyebrow" style="font-size:8px;margin-top:2px">kcal</div>';
+  html += '</div></div>';
+
+  // Ingredients
+  html += '<div style="padding:14px 16px;border-bottom:1px solid var(--border)">';
+  m.items.forEach(function(item,j){
+    html += '<div style="padding:6px 0;border-bottom:'+(j<m.items.length-1?'1px solid var(--border)':'none')+';font-size:12px;color:var(--ink2)">'+item+'</div>';
+  });
+  html += '</div>';
+
+  // Macros
+  html += '<div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:20px">';
+  [{l:'Protein',v:m.p,c:'#1a1a18'},{l:'Carbs',v:m.c,c:'#c9a84c'},{l:'Fat',v:m.f,c:'#6b7c5e'}].forEach(function(mc){
+    html += '<div><div style="font-size:12px;font-weight:500;color:'+mc.c+'">'+mc.v+'g</div><div style="font-size:9px;color:var(--dim)">'+mc.l+'</div></div>';
+  });
+  html += '</div>';
+
+  // Prep note
+  html += '<div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:11px;color:var(--dim);line-height:1.6">'+m.prep+'</div>';
+
+  // Log button
+  html += '<div onclick="logMeal(m)" style="padding:14px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;background:'+(logged?'var(--ink)':'transparent')+'">';
+  html += '<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:'+(logged?'var(--cream)':'var(--dim)')+'">';
+  html += logged ? '✓ Meal Logged' : 'Log This Meal';
+  html += '</div></div>';
+  html += '</div></div></div>';
+
+  html += '</div>';
+  v.innerHTML = html;
+}
+
+// ── RESULTS ───────────────────────────────────────────────────
+function renderResults(v){
+  if(S.sub==='testimonial'){ renderTestimonial(v); return; }
+
+  var html = '<div class="pb80">';
+
+  // Header
+  html += '<div style="background:var(--white);padding:20px;border-bottom:1px solid var(--border)">';
+  html += '<div class="eyebrow" style="margin-bottom:4px">Client Results</div>';
+  html += '<div class="display" style="font-size:28px;margin-bottom:6px">Transformations</div>';
+  html += '<div style="font-size:12px;color:var(--dim);line-height:1.6">Real people. Real commitment. Real results. Every transformation on this page started with someone who was tired of wondering what was possible.</div>';
+  html += '</div>';
+
+  // Stats bar
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-bottom:1px solid var(--border)">';
+  [{v:'Add',l:'Clients Coached'},{v:'Add',l:'Avg lbs Lost'},{v:'Add',l:'Avg Weeks'}].forEach(function(s){
+    html += '<div style="background:var(--white);padding:14px;text-align:center">';
+    html += '<div class="display" style="font-size:22px;margin-bottom:2px">'+s.v+'</div>';
+    html += '<div class="eyebrow" style="font-size:8px">'+s.l+'</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // Testimonials
+  html += '<div style="padding:16px 20px">';
+  html += '<div class="eyebrow" style="margin-bottom:14px">Client Stories</div>';
+
+  TESTIMONIALS.forEach(function(t,i){
+    html += '<div onclick="S.sub=\'testimonial\';S.subData=i;render()" style="background:var(--white);border:1px solid var(--border);margin-bottom:10px;cursor:pointer">';
+
+    // Before/after photos
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);height:160px">';
+    if(t.before){
+      html += '<img src="'+t.before+'" style="width:100%;height:100%;object-fit:cover"/>';
+    } else {
+      html += '<div class="photo-box" style="height:160px;font-size:8px">Before</div>';
+    }
+    if(t.after){
+      html += '<img src="'+t.after+'" style="width:100%;height:100%;object-fit:cover"/>';
+    } else {
+      html += '<div class="photo-box" style="height:160px;font-size:8px">After</div>';
+    }
+    html += '</div>';
+
+    html += '<div style="padding:14px">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">';
+    html += '<div>';
+    html += '<div style="font-size:14px;font-weight:500">'+t.name+'</div>';
+    html += '<div style="font-size:10px;color:var(--dim);margin-top:2px">'+t.region+' · Age '+t.age+'</div>';
+    html += '</div>';
+    html += '<span class="pill">'+t.program+'</span>';
+    html += '</div>';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">';
+    html += '<span class="pill" style="border-color:var(--red);color:var(--red)">Lost '+t.lost+'</span>';
+    html += '<span class="pill" style="border-color:var(--sage);color:var(--sage)">'+t.duration+'</span>';
+    html += '</div>';
+    html += '<div style="font-size:11px;color:var(--dim);line-height:1.6;font-style:italic">"'+t.quote.slice(0,80)+'..."</div>';
+    html += '<div style="font-size:10px;color:var(--dim);margin-top:8px;letter-spacing:1px">Read full story →</div>';
+    html += '</div></div>';
+  });
+
+  // Add testimonial CTA
+  html += '<div style="border:1px dashed var(--border2);padding:20px;text-align:center;margin-top:4px">';
+  html += '<div class="eyebrow" style="margin-bottom:8px">Add Your Story</div>';
+  html += '<div style="font-size:12px;color:var(--dim);line-height:1.7">Send before/after photos and your story to add it here. Your transformation could be the one that starts someone else\'s journey.</div>';
+  html += '</div>';
+
+  html += '</div></div>';
+  v.innerHTML = html;
+}
+
+function renderTestimonial(v){
+  var t = TESTIMONIALS[S.subData];
+  var html = '<div class="pb80">';
+  html += '<div style="padding:16px 20px">';
+  html += '<button onclick="S.sub=null;render()" style="background:none;border:none;font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:2px;color:var(--dim);cursor:pointer;padding:0;margin-bottom:16px;text-transform:uppercase">← Transformations</button>';
+  html += '</div>';
+
+  // Photos
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);height:240px;margin-bottom:0">';
+  if(t.before){
+    html += '<div style="position:relative"><img src="'+t.before+'" style="width:100%;height:240px;object-fit:cover"/><div style="position:absolute;bottom:8px;left:8px;background:rgba(26,26,24,0.7);padding:3px 8px;font-size:8px;letter-spacing:2px;color:white;text-transform:uppercase">Before</div></div>';
+  } else {
+    html += '<div class="photo-box" style="height:240px;flex-direction:column;gap:4px"><div>Before</div><div style="font-size:8px">Photo coming</div></div>';
+  }
+  if(t.after){
+    html += '<div style="position:relative"><img src="'+t.after+'" style="width:100%;height:240px;object-fit:cover"/><div style="position:absolute;bottom:8px;right:8px;background:rgba(26,26,24,0.7);padding:3px 8px;font-size:8px;letter-spacing:2px;color:white;text-transform:uppercase">After</div></div>';
+  } else {
+    html += '<div class="photo-box" style="height:240px;flex-direction:column;gap:4px"><div>After</div><div style="font-size:8px">Photo coming</div></div>';
+  }
+  html += '</div>';
+
+  html += '<div style="padding:20px">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">';
+  html += '<div>';
+  html += '<div class="display" style="font-size:28px;margin-bottom:4px">'+t.name+'</div>';
+  html += '<div style="font-size:11px;color:var(--dim)">'+t.region+' · Age '+t.age+'</div>';
+  html += '</div>';
+  html += '<span class="pill pill-dark">'+t.program+'</span>';
+  html += '</div>';
+
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">';
+  html += '<span class="pill" style="border-color:var(--red);color:var(--red)">Lost '+t.lost+'</span>';
+  html += '<span class="pill" style="border-color:var(--sage);color:var(--sage)">'+t.gained+'</span>';
+  html += '<span class="pill">'+t.duration+'</span>';
+  html += '</div>';
+
+  html += '<div class="rule" style="margin-bottom:20px"></div>';
+  html += '<div class="display" style="font-size:18px;line-height:1.5;color:var(--ink);margin-bottom:20px;font-style:italic">"'+t.quote+'"</div>';
+  html += '<div class="rule" style="margin-bottom:20px"></div>';
+  html += '<div style="font-size:12px;color:var(--dim);line-height:1.8;font-style:italic">Full story and additional details can be added here. Include the specific struggles they faced, the turning point, and what their life looks like now.</div>';
+  html += '</div></div>';
+  v.innerHTML = html;
+}
+
+// iOS install hint
+window.addEventListener('load', function(){
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIOS && !navigator.standalone){
+    setTimeout(function(){
+      var b = document.createElement('div');
+      b.style.cssText = 'position:fixed;bottom:80px;left:16px;right:16px;background:var(--ink);padding:14px 16px;font-size:11px;color:rgba(255,255,255,0.7);z-index:999;line-height:1.6;font-family:DM Mono,monospace;letter-spacing:1px';
+      b.innerHTML = 'Add DDW to Home Screen: tap Share then "Add to Home Screen" <button onclick="this.parentNode.remove()" style="float:right;background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:14px;padding:0">✕</button>';
+      document.body.appendChild(b);
+      setTimeout(function(){ if(b.parentNode) b.remove(); }, 8000);
+    }, 2500);
+  }
+});
+
+// ── BOOT (auth-gated) ─────────────────────────────────────────
+window.addEventListener('load', function(){
+  bootAuth();
+});
+</script>
+</body>
+</html>
